@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 const MAX_ITERATIONS = 100;
-const LOOP_DELAY_MS = 500;
+const LOOP_DELAY_MS = 10_000;
 
 export default function autoContinue(pi: ExtensionAPI) {
 	let remaining = 0;

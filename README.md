@@ -56,7 +56,7 @@ Press **Escape** at any time to pause the loop.
 ## How it works
 
 1. `/continue N "message"` starts a loop that will run `N` times
-2. After each agent response completes (`agent_end` event), the extension waits **500ms** then sends the next message via `sendUserMessage()` with `followUp` delivery
+2. After each agent response completes (`agent_end` event), the extension waits **10 seconds** then sends the next message via `sendUserMessage()` with `followUp` delivery
 3. The footer status updates in real time: `auto-continue ◉ 3`
 4. Pressing `Escape` calls `stop()`, which cancels the pending timer and resets state — no more messages are sent
 
