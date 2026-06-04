@@ -189,7 +189,17 @@ export default function autoContinue(pi: ExtensionAPI) {
 		},
 	});
 
-	pi.on("agent_end", async (_event, _ctx) => {
+	/**
+	 * Schedule the next continuation message.
+	 * Called from turn_end when the agent is idle.
+	 */
+	function scheduleNext(ctx: {
+		ui: {
+			setStatus: (key: string, val: string) => void;
+			notify: (msg: string, level: string) => void;
+			theme: { fg: (style: string, text: string) => string };
+		};
+	}) {
 		if (!active || remaining <= 0) return;
 
 		remaining--;
@@ -200,28 +210,27 @@ export default function autoContinue(pi: ExtensionAPI) {
 			active = false;
 			customMessage = null;
 			console.log("[auto-continue] Loop completed successfully");
-			_ctx.ui.setStatus("auto-continue", "");
-			_ctx.ui.notify("Auto-continuation completed", "info");
-			// Don't schedule a timer — we're done
+			ctx.ui.setStatus("auto-continue", "");
+			ctx.ui.notify("Auto-continuation completed", "info");
 			return;
 		}
 
-		// Update status with the new count (won't show 0 since we already returned above)
-		updateStatus(_ctx);
-
-		// Cancel any prior pending timer (defensive against rapid agent_end events)
+		updateStatus(ctx);
 		cancelPendingTimer();
 
-		// Schedule the next message with guards against stale state
 		pendingTimer = setTimeout(() => {
 			pendingTimer = null;
-
-			// Guard: loop may have been stopped/paused while timer was pending
 			if (!active || remaining <= 0) return;
-
-			// Guard: agent may now be busy (user typed something) — use followUp to queue safely
 			pi.sendUserMessage(msg, { deliverAs: "followUp" });
 		}, LOOP_DELAY_MS);
+	}
+
+	// Use turn_end + isIdle() so the continuation fires only after ALL turns
+	// (including all tool call rounds) complete — not between tool calls.
+	pi.on("turn_end", async (_event, _ctx) => {
+		if (!active || remaining <= 0) return;
+		if (!_ctx.isIdle()) return;
+		scheduleNext(_ctx);
 	});
 
 	pi.on("session_start", async (_event, ctx) => {
