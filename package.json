@@ -1,0 +1,10 @@
+{
+  "name": "pi-ext-auto-continue",
+  "version": "1.0.0",
+  "description": "Auto-continue loop for pi coding agent — sends follow-up messages with Escape-to-pause, custom messages, and live footer status",
+  "keywords": ["pi", "pi-extension", "auto-continue"],
+  "license": "MIT",
+  "pi": {
+    "extensions": ["./auto-continue.ts"]
+  }
+}
