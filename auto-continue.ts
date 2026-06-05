@@ -3,7 +3,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 const MAX_ITERATIONS = 100;
 const LOOP_DELAY_MS = 10_000;
 /** How long to wait after the last agent_end before considering the prompt fully settled. */
-const SETTLE_MS = 3_000;
+const SETTLE_MS = 30_000;
 
 export default function autoContinue(pi: ExtensionAPI) {
 	let remaining = 0;
