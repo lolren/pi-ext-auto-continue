@@ -2,12 +2,15 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 const MAX_ITERATIONS = 100;
 const LOOP_DELAY_MS = 10_000;
+/** How long to wait after the last agent_end before considering the prompt fully settled. */
+const SETTLE_MS = 3_000;
 
 export default function autoContinue(pi: ExtensionAPI) {
 	let remaining = 0;
 	let active = false;
 	let customMessage: string | null = null;
 	let pendingTimer: ReturnType<typeof setTimeout> | null = null;
+	let settleTimer: ReturnType<typeof setTimeout> | null = null;
 
 	function statusLabel(): string {
 		if (!active) return "";
@@ -38,17 +41,21 @@ export default function autoContinue(pi: ExtensionAPI) {
 		}
 	}
 
-	function cancelPendingTimer() {
+	function cancelAllTimers() {
 		if (pendingTimer !== null) {
 			clearTimeout(pendingTimer);
 			pendingTimer = null;
+		}
+		if (settleTimer !== null) {
+			clearTimeout(settleTimer);
+			settleTimer = null;
 		}
 	}
 
 	function reset(ctx?: {
 		ui: { setStatus: (key: string, val: string) => void };
 	}) {
-		cancelPendingTimer();
+		cancelAllTimers();
 		remaining = 0;
 		active = false;
 		customMessage = null;
@@ -64,7 +71,7 @@ export default function autoContinue(pi: ExtensionAPI) {
 			};
 		},
 	) {
-		cancelPendingTimer();
+		cancelAllTimers();
 		remaining = 0;
 		active = false;
 		customMessage = null;
@@ -191,7 +198,7 @@ export default function autoContinue(pi: ExtensionAPI) {
 
 	/**
 	 * Schedule the next continuation message.
-	 * Called from agent_end after all turns complete.
+	 * Only called after the settle window expires (no new agent_end events).
 	 */
 	function scheduleNext(ctx: {
 		ui: {
@@ -200,6 +207,8 @@ export default function autoContinue(pi: ExtensionAPI) {
 			theme: { fg: (style: string, text: string) => string };
 		};
 	}) {
+		settleTimer = null;
+
 		if (!active || remaining <= 0) return;
 
 		remaining--;
@@ -225,12 +234,33 @@ export default function autoContinue(pi: ExtensionAPI) {
 		}, LOOP_DELAY_MS);
 	}
 
-	// agent_end fires once per user prompt, after ALL turns (including tool calls)
-	// complete. This is the right hook — continuation only fires after everything
-	// settles, not between individual tool call rounds.
-	pi.on("agent_end", async (_event, _ctx) => {
+	/**
+	 * Kick the settle timer. Each agent_end resets it.
+	 * Only when no agent_end fires within SETTLE_MS do we actually schedule
+	 * the next continuation — this prevents firing between rapid turns/tool calls.
+	 */
+	function onAgentEnd(ctx: {
+		ui: {
+			setStatus: (key: string, val: string) => void;
+			notify: (msg: string, level: string) => void;
+			theme: { fg: (style: string, text: string) => string };
+		};
+	}) {
 		if (!active || remaining <= 0) return;
-		scheduleNext(_ctx);
+
+		// Reset settle timer on each agent_end
+		if (settleTimer !== null) {
+			clearTimeout(settleTimer);
+		}
+		settleTimer = setTimeout(() => {
+			scheduleNext(ctx);
+		}, SETTLE_MS);
+	}
+
+	// agent_end fires after each turn within a prompt. We debounce it with a
+	// settle timer so the continuation only fires after ALL turns settle.
+	pi.on("agent_end", async (_event, _ctx) => {
+		onAgentEnd(_ctx);
 	});
 
 	pi.on("session_start", async (_event, ctx) => {

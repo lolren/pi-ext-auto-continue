@@ -56,14 +56,14 @@ Press **Escape** at any time to pause the loop.
 ## How it works
 
 1. `/continue N "message"` starts a loop that will run `N` times
-2. After each agent response completes (`agent_end` event — fires once per prompt, after all turns and tool calls resolve), the extension proceeds
-3. It waits **10 seconds** (`LOOP_DELAY_MS`) to give the previous response time to settle, then sends the next message
+2. After each agent turn completes (`agent_end` event), the extension starts a **3-second settle timer**. If another `agent_end` fires (another turn), the timer resets. Only when no `agent_end` fires for 3 seconds — meaning all turns and tool calls are truly done — does it proceed
+3. It then waits **10 seconds** (`LOOP_DELAY_MS`) for good measure, then sends the next message
 4. The footer status updates in real time: `auto-continue ◉ 3`
 5. Pressing `Ctrl+Alt+P` calls `stop()`, which cancels the pending timer and resets state — no more messages are sent
 
 ## Safety
 
-- **Never fires between tool calls** — uses `turn_end` + `ctx.isIdle()` so continuation only triggers after ALL turns resolve, not after individual tool calls
+- **Never fires between tool calls** — uses a 3-second settle debounce on `agent_end`; continuation only triggers after turns stop arriving
 - **Race-condition safe** — pending timers are cancelled on stop/pause, and the timer callback double-checks state before sending
 - **Busy-agent safe** — uses `{ deliverAs: "followUp" }` so it won't throw if you type while messages are queued
 - **Max cap** — `N` is capped at 100 iterations
