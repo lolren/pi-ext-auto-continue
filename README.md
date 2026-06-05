@@ -56,7 +56,7 @@ Press **Escape** at any time to pause the loop.
 ## How it works
 
 1. `/continue N "message"` starts a loop that will run `N` times
-2. After each agent turn completes (`turn_end` event), the extension checks `ctx.isIdle()`. Only when the agent is truly idle (all turns done, all tool calls resolved) does it proceed
+2. After each agent response completes (`agent_end` event — fires once per prompt, after all turns and tool calls resolve), the extension proceeds
 3. It waits **10 seconds** (`LOOP_DELAY_MS`) to give the previous response time to settle, then sends the next message
 4. The footer status updates in real time: `auto-continue ◉ 3`
 5. Pressing `Escape` calls `stop()`, which cancels the pending timer and resets state — no more messages are sent

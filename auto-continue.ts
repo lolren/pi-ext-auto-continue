@@ -191,7 +191,7 @@ export default function autoContinue(pi: ExtensionAPI) {
 
 	/**
 	 * Schedule the next continuation message.
-	 * Called from turn_end when the agent is idle.
+	 * Called from agent_end after all turns complete.
 	 */
 	function scheduleNext(ctx: {
 		ui: {
@@ -225,11 +225,11 @@ export default function autoContinue(pi: ExtensionAPI) {
 		}, LOOP_DELAY_MS);
 	}
 
-	// Use turn_end + isIdle() so the continuation fires only after ALL turns
-	// (including all tool call rounds) complete — not between tool calls.
-	pi.on("turn_end", async (_event, _ctx) => {
+	// agent_end fires once per user prompt, after ALL turns (including tool calls)
+	// complete. This is the right hook — continuation only fires after everything
+	// settles, not between individual tool call rounds.
+	pi.on("agent_end", async (_event, _ctx) => {
 		if (!active || remaining <= 0) return;
-		if (!_ctx.isIdle()) return;
 		scheduleNext(_ctx);
 	});
 
