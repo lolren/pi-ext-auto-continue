@@ -51,6 +51,8 @@ export default function autoContinue(pi: ExtensionAPI) {
 			settleTimer = null;
 		}
 	}
+	// Alias so old call sites don't silently break
+	const cancelPendingTimer = cancelAllTimers;
 
 	function reset(ctx?: {
 		ui: { setStatus: (key: string, val: string) => void };
@@ -225,7 +227,7 @@ export default function autoContinue(pi: ExtensionAPI) {
 		}
 
 		updateStatus(ctx);
-		cancelPendingTimer();
+		cancelAllTimers();
 
 		pendingTimer = setTimeout(() => {
 			pendingTimer = null;
