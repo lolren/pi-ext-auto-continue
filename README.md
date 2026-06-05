@@ -6,7 +6,7 @@ A [pi](https://github.com/earendil-works/pi-coding-agent) extension that automat
 
 - **Auto-loop** — `/continue 5` tells the agent to respond 5 times in a row
 - **Custom messages** — `/continue 3 "keep going"` sends "keep going" instead of "continue"
-- **Escape to pause** — press `Escape` to stop the loop at any time (cancels pending messages too)
+- **Pause anytime** — press `Ctrl+Alt+P` to stop the loop at any time (cancels pending messages too)
 - **Live status** — shows `auto-continue ◉ 5` in the TUI footer next to the model name
 - **Safe delivery** — uses `followUp` delivery so it doesn't throw if you type while it's running
 - **Production-ready** — race-condition-safe timer management, max cap, input validation
@@ -59,7 +59,7 @@ Press **Escape** at any time to pause the loop.
 2. After each agent response completes (`agent_end` event — fires once per prompt, after all turns and tool calls resolve), the extension proceeds
 3. It waits **10 seconds** (`LOOP_DELAY_MS`) to give the previous response time to settle, then sends the next message
 4. The footer status updates in real time: `auto-continue ◉ 3`
-5. Pressing `Escape` calls `stop()`, which cancels the pending timer and resets state — no more messages are sent
+5. Pressing `Ctrl+Alt+P` calls `stop()`, which cancels the pending timer and resets state — no more messages are sent
 
 ## Safety
 
@@ -81,7 +81,7 @@ Press **Escape** at any time to pause the loop.
 
 | Key | Action |
 |-----|--------|
-| `Escape` | Pause the loop (cancels pending messages) |
+| `Ctrl+Alt+P` | Pause the loop (cancels pending messages) |
 
 ## Requirements
 

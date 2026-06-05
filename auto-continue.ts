@@ -177,14 +177,14 @@ export default function autoContinue(pi: ExtensionAPI) {
 		},
 	});
 
-	// Pressing Escape while auto-continue is active stops the loop
-	pi.registerShortcut("escape", {
+	// Ctrl+Alt+P to pause the loop (Escape is reserved by built-in app.interrupt)
+	pi.registerShortcut("ctrl+alt+p", {
 		description: "Pause auto-continuation loop",
 		handler: async (ctx) => {
 			if (active) {
-				stop("escape interrupt", ctx);
-				console.log("[auto-continue] Loop paused by Escape");
-				ctx.ui.notify("Auto-continuation paused (Escape)", "info");
+				stop("pause shortcut", ctx);
+				console.log("[auto-continue] Loop paused via Ctrl+Alt+P");
+				ctx.ui.notify("Auto-continuation paused (Ctrl+Alt+P)", "info");
 			}
 		},
 	});
