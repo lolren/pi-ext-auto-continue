@@ -163,6 +163,10 @@ export default function autoContinue(pi: ExtensionAPI) {
 				"info",
 			);
 			updateStatus(ctx);
+
+			// Kick the settle timer immediately — if the agent is already idle,
+			// we'd never get an agent_end to start the loop.
+			onAgentEnd(ctx);
 		},
 	});
 
